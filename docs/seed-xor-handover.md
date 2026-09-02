@@ -4,10 +4,23 @@ Status: ready to implement, 2026-09-02. Written for an agent with no prior conte
 
 ## What you are building
 
-A second mode in this app that splits a BIP39 seed into N parts, each of which
-is itself a valid BIP39 seed, and recombines parts back into the original. This
-is Coldcard's [Seed XOR](https://github.com/Coldcard/firmware/blob/master/docs/seed-xor.md),
+A second mode in this app implementing Coldcard's
+[Seed XOR](https://github.com/Coldcard/firmware/blob/master/docs/seed-xor.md),
 an open standard that explicitly invites other implementations.
+
+**Both directions are in scope, and neither is optional:**
+
+| Direction | What the user does | Milestone |
+|---|---|---|
+| **Split** | Supplies a seed, gets N parts back, each itself a valid BIP39 seed | M3 |
+| **Combine** | Supplies N parts, gets the original seed back | M2 |
+
+A third framing falls out of Combine for free and is worth exposing in the copy:
+XOR-ing N seeds you already hold produces a *new* wallet, with no change to any
+of the originals. Same code path, different intent.
+
+Build Combine first. It is the half the acceptance vectors test directly, and
+Split is only correct if Combine inverts it.
 
 Why here rather than a new app: the input path (scan a SeedQR or type words),
 the output path (show words, transcribe as a SeedQR), the stateless design and
@@ -245,7 +258,151 @@ corrected once already; do not reintroduce them.
 
 ---
 
-## 8. Milestones
+## 8. Housekeeping the repo already has opinions about
+
+### Licensing
+
+The repo is **GPL-3.0-or-later**. This is not a preference: the app links
+`security`, `server` and `slint-keyos-platform` from the SDK, all of which are
+GPL-3.0-or-later, so the built binary carries those terms. It also matches
+Foundation's own Prime apps.
+
+Every new source file gets the same two-line header as its neighbours, matching
+the file's comment syntax:
+
+```rust
+// SPDX-FileCopyrightText: 2026 Foundation Devices, Inc. <hello@foundation.xyz>
+// SPDX-License-Identifier: GPL-3.0-or-later
+```
+
+`LICENSE` (full GPL-3.0 text) is already committed. Do not add a second licence,
+and do not copy the SDK templates' MIT headers into new files; the scaffolded
+ones were relicensed for exactly this reason.
+
+### SDK pinning, which the repo does not actually do
+
+Read this before blaming the code for a strange build.
+
+- Built and verified against **SDK 1.0.0** (`foundation-sdk-1.0.0-aarch64-apple-darwin`).
+- `Cargo.toml` uses relative paths into `.foundation-sdk/current`, which is a
+  symlink to `~/.foundation/sdk/current`, which is itself a symlink to the
+  installed bundle. `.foundation-sdk/` is **gitignored**.
+- So **the repo pins no SDK version.** A clone on a machine whose
+  `~/.foundation/sdk/current` points elsewhere silently builds against that
+  bundle instead. Later SDKs are known to diverge (message ids get renumbered
+  between versions), so a mismatch shows up as behaviour that makes no sense
+  rather than as a clean error.
+- **First thing to do:** run `foundation doctor` and confirm the SDK root it
+  prints is the 1.0.0 bundle. If it is not, either switch the symlink or expect
+  to port.
+- A stale `FOUNDATION_SDK_ROOT` inherited from an old `foundation develop` shell
+  overrides discovery *and* PATH, so every `foundation` command silently uses the
+  old bundle, including a fresh `foundation develop`. If anything looks
+  time-warped, `echo $FOUNDATION_SDK_ROOT` and restart the shell.
+- `Cargo.lock` **is** committed, so crates.io deps (`bip39`, `qrcode`) are pinned. Keep it committed.
+- `manifest.toml` is generated and gitignored. Never hand-edit it; change
+  `app-config.toml` and rebuild. Message ids differ between SDK versions, so a
+  stale one is a real hazard.
+
+### App icon
+
+**No icon work is needed.** Seed XOR is a mode in this app, so it keeps the
+existing launcher tile. `resources/icon.svg` is already correct.
+
+If you do touch it, the rules are unforgiving and `foundation build` enforces
+only the first one:
+
+- Exactly **110x110** on the root `<svg>`, or the build hard-errors.
+- **Transparent background, glyph only.** The launcher draws its own round badge
+  plate; any full-canvas `<rect>` or `<circle>` renders as a slab over it. The
+  build never checks this.
+- Verify with the 8-point check: render over magenta and sample four corners
+  **and** four mid-edges. Mid-edges are what catch a rounded-rect background,
+  whose corners are cut but whose edges are opaque.
+- Sanity check the output: a glyph `icon.bin` is well under 48KB, which is what a
+  fully opaque 110x110 costs. The current one is 16KB.
+- There is no `icon-dark.svg` and none is wanted; the launcher disc is near-black
+  in both themes.
+- The launcher caches the tile per app-id. A changed icon needs a **device
+  reboot**, not a reinstall.
+
+## 9. References
+
+**Formats and specs**
+
+- Seed XOR: <https://github.com/Coldcard/firmware/blob/master/docs/seed-xor.md> (the spec and both acceptance vectors)
+- BIP-39 mnemonics: <https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki>
+- SeedQR (Standard and Compact), for the transcription hand-off: <https://github.com/SeedSigner/seedsigner/blob/dev/docs/seed_qr/README.md>
+
+**In this repo**
+
+- `crates/seedqr-core/src/lib.rs` — the testable-core pattern to copy
+- `README.md` — build, permissions, what is and is not verified
+
+**In the KeyOS tree** (`~/Documents/AI/KeyOS`), the source of the UI conventions
+
+- `ui/ui/widgets/seed-words.slint` — the seed word pill and 2x6 paginated layout this app matches
+- `ui/ui/palettes/{dark,light}-palette.slint` and `palettes/ui-colors.slint` — where the pill fill colours come from
+- `ui/ui/fonts.slint` — the 18/20/22/24/26 text scale mirrored by the `Fonts` global
+- `apps/gui-app-seed-vault/` — Foundation's own seed handling app
+
+**In the SDK bundle** (`~/.foundation/sdk/current`)
+
+- `docs/guide/src/foundation-cli.md` — every CLI command, when to use it, and what it touches
+- `docs/guide/src/MIGRATIONS.md` — the gotcha list, including the icon rules and the stale-SDK-root trap
+- `lib/keyos/api/*/manifest.toml` — the permission groups a third-party app can actually hold
+- `lib/keyos/ui2/components/ui/` — the ui2 component surface (`Button`, `Input`, `Card`, ...)
+
+## 10. Delivery: branch, PR and Linear item
+
+Do this at the start, not as an afterthought. The Linear item is where the
+decisions get recorded while you still remember them.
+
+### Linear
+
+Create an issue on the **Embedded** team, assigned to QnA, as a sub-issue of
+**EMB-8** ("SeedQR Tool: KeyOS SDK app for hand-transcribing and verifying a
+SeedQR"), which is the parent app this mode lands in.
+
+Title it for the work, not the feature, e.g. "Seed XOR: split and combine a BIP39
+seed into N valid parts". The description should carry:
+
+- What Seed XOR is, in two sentences, and that it is an open standard
+- That it is N-of-N, and that any subset is itself a valid wallet
+- A link to this handover doc and to the Coldcard spec
+- The decision you made on 18-word seeds (section 12, risk 4)
+- Whether deterministic split shipped, and if not, why
+- An honest "Not verified" section. Copy the shape from EMB-8; do not claim
+  hardware verification you did not do.
+
+### Git
+
+The work is a mode in **this** repo. Do not create a new repository.
+
+```bash
+git checkout -b seed-xor
+# ... work, committing as you go ...
+gh pr create --fill --base main
+```
+
+Commit messages: explain why, not just what, and end each with the
+`Co-Authored-By:` trailer already used in this repo's history. `git log` is the
+house style reference.
+
+Link the PR back to the Linear issue, and attach the PR to the issue.
+
+**If the decision changes and Seed XOR ships standalone** (it should not, see
+"What you are building"), then and only then:
+
+```bash
+gh repo create keyos-seed-xor --private --source=. --remote=origin --push
+```
+
+Default to **private**. It is the reversible choice, and flipping it later is one
+command. Before making anything public, grep the tree for key material and local
+absolute paths, and add a `LICENSE` (section 8).
+
+## 11. Milestones
 
 | M | Deliverable | Done when |
 |---|---|---|
@@ -261,7 +418,7 @@ correctness risk. Do not start the UI until both vectors pass.
 
 ---
 
-## 9. Risks
+## 12. Risks
 
 1. **Silent wrong answers.** A subtly wrong XOR still produces a valid-looking mnemonic. Nothing will look broken. The vectors in section 2 are the only real defence, so write them first.
 2. **The subset footgun.** Any subset of parts is a valid seed with real funds possible on it. A user who loses one part does not get an error, they get a different wallet. The UI must state N-of-N plainly and repeatedly.
@@ -269,10 +426,12 @@ correctness risk. Do not start the UI until both vectors pass.
 4. **18-word seeds.** The spec supports them and `bip39` handles them (verified: 24-byte entropy round-trips). `security::Seed` in the SDK does **not**: `Seed::from_bytes` matches only 16 or 32 bytes and panics otherwise, so a 24-byte entropy panics the app. Note the existing SeedQR flow is already 12/24 only for the same reason. Either restrict Seed XOR to 12 and 24 and say so in the UI, or keep 18-word values entirely inside `seedqr-core` and never construct a `security::Seed` from one. Decide this at M0, not later.
 5. **Scope creep into SLIP39.** Different scheme, M-of-N, not interoperable. Out of scope here.
 
-## 10. Definition of done
+## 13. Definition of done
 
 - Both acceptance vectors pass in `cargo test -p seedqr-core`.
 - Property tests cover ordering, round-trip, subset-is-wrong, and mixed lengths.
 - `foundation build --release` is clean, permissions unchanged from today's read-only set.
 - Split and combine both work end to end on real hardware, including one part transcribed to a SeedQR and scanned back.
 - README updated. The "Not verified" section stays honest.
+- New files carry the GPL-3.0-or-later SPDX header (section 8).
+- Linear issue raised under EMB-8 and a PR opened against `main`, with the 18-word and deterministic-mode decisions written down (section 10).
