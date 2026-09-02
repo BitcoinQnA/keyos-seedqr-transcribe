@@ -1,0 +1,12 @@
+[package]
+name = "seedqr-core"
+version = "0.1.0"
+edition = "2021"
+
+# No KeyOS or Slint dependency, so this builds and tests on the host.
+
+[dependencies]
+qrcode = { version = "0.12", default-features = false }
+
+[dev-dependencies]
+bip39 = "2.2"

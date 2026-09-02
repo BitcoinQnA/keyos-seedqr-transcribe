@@ -1,0 +1,19 @@
+import {
+    Theme,
+    UISize,
+    Images,
+} from "@ui/theme.slint";
+import { Router } from "gen/router.slint";
+import { SeedState, Actions } from "globals.slint";
+
+export { Theme, Images, SeedState, Actions }
+export * from "gen/exports.slint";
+
+export component AppWindow inherits Window {
+    title: "SeedQR Tool";
+    preferred-width: UISize.screen-width;
+    preferred-height: UISize.screen-height;
+    background: Theme.palette-background;
+
+    Router { }
+}
