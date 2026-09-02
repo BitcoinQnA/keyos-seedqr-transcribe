@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Foundation Devices, Inc. <hello@foundation.xyz>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // App state and the Slint callback wiring.
 //
 // Everything the user loads lives in this struct and nowhere else. There is no

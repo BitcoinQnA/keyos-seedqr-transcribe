@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Foundation Devices, Inc. <hello@foundation.xyz>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 //! SeedQR grid geometry: turn a SeedQR payload into a module matrix, and split
 //! that matrix into the blocks the transcription screen walks through.
 //!

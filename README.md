@@ -108,3 +108,13 @@ vectors:
   callbacks in `src/app.rs` have never been executed.
 - **Strings are hardcoded English.** No `i18n/` and `include_translations: false`,
   matching the SDK template. It would need localizing before shipping to users.
+
+## Licence
+
+GPL-3.0-or-later, matching Foundation's own Passport Prime apps.
+
+This is not a free choice. The app links `security`, `server` and
+`slint-keyos-platform` from the Foundation SDK, all of which are
+GPL-3.0-or-later, so the built binary carries those terms. The SDK's templates
+and documentation are MIT, and the scaffolded files started that way; they were
+relicensed here to match what the linked runtime requires.

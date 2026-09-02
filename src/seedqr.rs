@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Foundation Devices, Inc. <hello@foundation.xyz>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 // Rendering for the transcription screens. The grid geometry and the SeedQR
 // encoding rules live in `seedqr-core`, which has no KeyOS dependency and is
 // covered by `cargo test -p seedqr-core`.
