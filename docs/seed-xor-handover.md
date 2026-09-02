@@ -336,22 +336,22 @@ only the first one:
 
 **In this repo**
 
-- `crates/seedqr-core/src/lib.rs` — the testable-core pattern to copy
-- `README.md` — build, permissions, what is and is not verified
+- `crates/seedqr-core/src/lib.rs`: the testable-core pattern to copy
+- `README.md`: build, permissions, what is and is not verified
 
 **In the KeyOS tree** (`~/Documents/AI/KeyOS`), the source of the UI conventions
 
-- `ui/ui/widgets/seed-words.slint` — the seed word pill and 2x6 paginated layout this app matches
-- `ui/ui/palettes/{dark,light}-palette.slint` and `palettes/ui-colors.slint` — where the pill fill colours come from
-- `ui/ui/fonts.slint` — the 18/20/22/24/26 text scale mirrored by the `Fonts` global
-- `apps/gui-app-seed-vault/` — Foundation's own seed handling app
+- `ui/ui/widgets/seed-words.slint`: the seed word pill and 2x6 paginated layout this app matches
+- `ui/ui/palettes/{dark,light}-palette.slint` and `palettes/ui-colors.slint`: where the pill fill colours come from
+- `ui/ui/fonts.slint`: the 18/20/22/24/26 text scale mirrored by the `Fonts` global
+- `apps/gui-app-seed-vault/`: Foundation's own seed handling app
 
 **In the SDK bundle** (`~/.foundation/sdk/current`)
 
-- `docs/guide/src/foundation-cli.md` — every CLI command, when to use it, and what it touches
-- `docs/guide/src/MIGRATIONS.md` — the gotcha list, including the icon rules and the stale-SDK-root trap
-- `lib/keyos/api/*/manifest.toml` — the permission groups a third-party app can actually hold
-- `lib/keyos/ui2/components/ui/` — the ui2 component surface (`Button`, `Input`, `Card`, ...)
+- `docs/guide/src/foundation-cli.md`: every CLI command, when to use it, and what it touches
+- `docs/guide/src/MIGRATIONS.md`: the gotcha list, including the icon rules and the stale-SDK-root trap
+- `lib/keyos/api/*/manifest.toml`: the permission groups a third-party app can actually hold
+- `lib/keyos/ui2/components/ui/`: the ui2 component surface (`Button`, `Input`, `Card`, ...)
 
 ## 10. Delivery: branch, PR and Linear item
 
