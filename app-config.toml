@@ -9,8 +9,8 @@ description = "Transcribe and verify a SeedQR by hand"
 icon = "resources/icon.svg"
 theme = "resources/theme.json"
 app-id = "0x832b9a9b5e060a1e89f5273856d0f879"
-version = "0.1.0"
-min-keyos-version = "1.0.0"
+version = "0.1.1"
+min-keyos-version = "1.4.0-beta3"
 signing-identity = "passport-prime-dev"
 
 [publisher]

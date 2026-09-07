@@ -40,7 +40,8 @@ Everything runs inside the SDK Nix shell:
 cd ~/Documents/AI/keyos-seedqr-transcribe && nix develop ~/.foundation/sdk/foundation-sdk-1.0.0-aarch64-apple-darwin --command foundation pack --release
 ```
 
-Signed with the `passport-prime-dev` identity. Publisher fingerprint:
+The package targets KeyOS `1.4.0-beta3` and is signed with the local
+`passport-prime-dev` identity. Publisher fingerprint:
 
 ```text
 19be3035a84826e7732fc07f56c62175ef3a0f4a86fb63a80cf73f93c4f56cfb
@@ -95,14 +96,16 @@ vectors:
   `os/settings`. No `os/security`, no `os/camera`. The scanner call is
   compile-time gated on `MessageAllowed<ShowModal>`, so a successful build
   proves that permission is present.
+- Runs on Passport Prime hardware. Every screen has been walked through on
+  device: welcome, format choice, both overviews, block navigation from the
+  first block to the last in Standard and Compact, and the verification prompt.
+  All of them render as intended.
 
 ## Not verified
 
-- **Nothing on hardware.** Scan, verify, word entry and block navigation have
-  never run against a real camera or touchscreen.
-- **No screen has been looked at.** The app launches without error, but the
-  simulator has no scriptable screenshot and its window is not reachable by the
-  screen tooling here, so nothing confirms the pages actually render as intended.
+- **The camera paths.** Loading a seed by scanning a SeedQR, and the comparison
+  that happens after scanning your copy, have not been confirmed against a real
+  code. The screens leading up to both have.
 - **No UI or integration tests.** The app crate builds only for
   `armv7a-unknown-xous-elf`, so nothing in `src/` is covered by a test. The
   callbacks in `src/app.rs` have never been executed.
