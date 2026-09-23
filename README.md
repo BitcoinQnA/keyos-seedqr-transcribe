@@ -4,6 +4,11 @@ A KeyOS SDK app for Passport Prime. It helps you copy a SeedQR onto a durable
 medium by hand, then checks the copy you made decodes back to the seed you
 started with.
 
+This is an independently published QnA app, not a Foundation-signed system app.
+Only enter a recovery phrase after you have decided to trust the app and its
+publisher. It has not had an independent security audit. Start with public test
+words when evaluating it.
+
 ## What it does
 
 1. **Welcome.** Load a seed by scanning an existing SeedQR, or by typing 12 or 24
@@ -21,9 +26,11 @@ started with.
 ## Nothing is stored
 
 The seed lives in memory for one session. The manifest requests no filesystem
-write permission, so the app cannot persist it even by mistake. `AppState::clear`
-scrubs the typed words, and the seed itself is a `security::Seed`, which zeroizes
-on drop.
+write permission. `AppState::clear` scrubs its typed-word buffer, and the seed
+itself is a `security::Seed`, which zeroizes on drop. The app also scrubs its
+temporary scanned payload and joined typed phrase after parsing; BIP39 mnemonics
+zeroize on drop. UI state may contain copies of entered words during the
+session; closing the app ends that session.
 
 The app never touches the camera. Scanning goes through the system QR Scanner as
 a fullscreen modal (`open_qr_scanner`), which needs only `ShowModal`.
@@ -40,12 +47,18 @@ Everything runs inside the SDK Nix shell:
 cd ~/Documents/AI/keyos-seedqr-transcribe && nix develop ~/.foundation/sdk/foundation-sdk-1.0.0-aarch64-apple-darwin --command foundation pack --release
 ```
 
-The package targets KeyOS `1.4.0-beta3` and is signed with the local
-`passport-prime-dev` identity. Publisher fingerprint:
+The package targets KeyOS `1.4.0-beta3` or newer and is signed with the local
+`qna-dev` identity. The self-asserted publisher name is QnA, not Foundation.
+Before allowing the certificate on a Passport, compare this full fingerprint
+with the certificate supplied through an independent QnA channel:
 
 ```text
-19be3035a84826e7732fc07f56c62175ef3a0f4a86fb63a80cf73f93c4f56cfb
+1fc590a13d547db696e0d3cd12d07a4d7b119e957b301aedd1299b10a1852971
 ```
+
+The publisher name and contact details in a certificate are self-asserted;
+matching the full fingerprint is the trust check. A public release should ship
+the QnA certificate alongside the app package.
 
 Outputs land in `target/keyos/`:
 
@@ -96,21 +109,24 @@ vectors:
   `os/settings`. No `os/security`, no `os/camera`. The scanner call is
   compile-time gated on `MessageAllowed<ShowModal>`, so a successful build
   proves that permission is present.
-- Runs on Passport Prime hardware. Every screen has been walked through on
-  device: welcome, format choice, both overviews, block navigation from the
-  first block to the last in Standard and Compact, and the verification prompt.
-  All of them render as intended.
+- Runs on Passport Prime hardware. On 2026-09-23, a public 24-word SeedSigner
+  test vector was entered and corrected on-device, both review pages and the
+  Previous button were exercised, Standard transcription reached block 25 of
+  25, and the system scanner opened from the verification page. A public 12-word
+  SeedQR was also imported through the camera and transcribed in Standard and
+  Compact formats (16 and 9 blocks). Scanning known-good Standard and Compact
+  test codes reported a match. A different seed and an ordinary-text QR
+  reported the appropriate errors. The success icon was checked on-device.
 
-## Not verified
+## Remaining limits
 
-- **The camera paths.** Loading a seed by scanning a SeedQR, and the comparison
-  that happens after scanning your copy, have not been confirmed against a real
-  code. The screens leading up to both have.
-- **No UI or integration tests.** The app crate builds only for
-  `armv7a-unknown-xous-elf`, so nothing in `src/` is covered by a test. The
-  callbacks in `src/app.rs` have never been executed.
-- **Strings are hardcoded English.** No `i18n/` and `include_translations: false`,
-  matching the SDK template. It would need localizing before shipping to users.
+- **Hand-copy usability.** The camera tests used generated public test QRs,
+  not a code marked out by a person on a physical medium.
+- **No automated UI or integration tests.** The app crate builds only for
+  `armv7a-unknown-xous-elf`; the nine host tests cover `seedqr-core`, not the
+  callbacks in `src/app.rs`. Hardware UI testing is manual.
+- **English only.** No `i18n/` and `include_translations: false`, matching the
+  SDK template. Localization remains future work.
 
 ## Licence
 

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2026 Foundation Devices, Inc. <hello@foundation.xyz>
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-import { Theme, UISize, ControlSize, ButtonVariant } from "@ui/theme.slint";
+import { Theme, UISize, ControlSize, ButtonVariant, Images } from "@ui/theme.slint";
 import { Button } from "@ui/button.slint";
 import { Navigate } from "../../gen/navigate.slint";
 import { SeedState, Actions, Fonts } from "../../globals.slint";
@@ -23,10 +23,19 @@ export component ResultPagePage inherits PageBody {
         border-radius: 44px;
         background: SeedState.verify-ok ? Theme.color-success : Theme.palette-danger;
 
-        Text {
+        if (SeedState.verify-ok): Image {
+            width: 56px;
+            height: 56px;
+            x: 16px;
+            y: 16px;
+            source: Images.image("result-check");
+            image-fit: contain;
+        }
+
+        if (!SeedState.verify-ok): Text {
             width: parent.width;
             height: parent.height;
-            text: SeedState.verify-ok ? "\u{2713}" : "!";
+            text: "!";
             color: #ffffff;
             font-family: Theme.font-primary;
             font-size: 44px;

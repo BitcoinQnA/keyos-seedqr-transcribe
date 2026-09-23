@@ -3,9 +3,8 @@
 
 // App state and the Slint callback wiring.
 //
-// Everything the user loads lives in this struct and nowhere else. There is no
-// filesystem write permission in the manifest, so it cannot be persisted even
-// by accident, and `reset` scrubs the words before the seed is dropped.
+// The app state owns the loaded seed; the UI also holds copies of displayed words.
+// The manifest denies filesystem writes, and `reset` scrubs the typed-word buffer.
 
 use std::{cell::RefCell, rc::Rc};
 
@@ -85,17 +84,24 @@ pub fn init(ui: &AppWindow) {
         let state = state.clone();
         move || {
             let Some(ui) = ui.upgrade() else { return false };
-            let Some(data) = scan("Scan a SeedQR") else { return false };
+            let Some(mut data) = scan("Scan a SeedQR") else { return false };
+            let parsed = load_seed(&data);
+            data.zeroize();
 
-            match load_seed(&data) {
+            match parsed {
                 Ok(seed) => {
                     {
                         let mut current = state.borrow_mut();
                         current.clear();
+                        current.words = vec![String::new(); 12];
                         current.seed = Some(seed);
                     }
+                    let seed_state = ui.global::<SeedState>();
+                    seed_state.set_entry_text(SharedString::new());
+                    seed_state.set_suggestions(ModelRc::new(VecModel::<SharedString>::default()));
+                    push_entry(&ui, &state.borrow());
                     push_seed(&ui, &state.borrow(), "a scan");
-                    ui.global::<SeedState>().set_entry_error(SharedString::new());
+                    seed_state.set_entry_error(SharedString::new());
                     true
                 }
                 Err(message) => {
@@ -192,9 +198,11 @@ pub fn init(ui: &AppWindow) {
         let state = state.clone();
         move || {
             let Some(ui) = ui.upgrade() else { return false };
-            let phrase = state.borrow().words.join(" ");
+            let mut phrase = state.borrow().words.join(" ");
+            let parsed = Mnemonic::parse_in_normalized(Language::English, &phrase);
+            phrase.zeroize();
 
-            match Mnemonic::parse_in_normalized(Language::English, &phrase) {
+            match parsed {
                 Ok(mnemonic) => {
                     let seed = security::Seed::from_mnemonic(&mnemonic);
                     state.borrow_mut().seed = Some(seed);
@@ -254,7 +262,10 @@ pub fn init(ui: &AppWindow) {
         let state = state.clone();
         move || {
             let Some(ui) = ui.upgrade() else { return };
-            state.borrow_mut().review_page = state.borrow().review_page.saturating_sub(1);
+            {
+                let mut current = state.borrow_mut();
+                current.review_page = current.review_page.saturating_sub(1);
+            }
             push_entry(&ui, &state.borrow());
         }
     });
@@ -339,10 +350,12 @@ pub fn init(ui: &AppWindow) {
         let state = state.clone();
         move || {
             let Some(ui) = ui.upgrade() else { return false };
-            let Some(data) = scan("Scan your copy") else { return false };
+            let Some(mut data) = scan("Scan your copy") else { return false };
+            let parsed = load_seed(&data);
+            data.zeroize();
 
             let seed_state = ui.global::<SeedState>();
-            match load_seed(&data) {
+            match parsed {
                 Ok(scanned) => {
                     let matches = state
                         .borrow()
