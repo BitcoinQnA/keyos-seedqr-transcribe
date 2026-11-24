@@ -44,7 +44,10 @@ outside.
 Everything runs inside the SDK Nix shell:
 
 ```bash
-cd ~/Documents/AI/keyos-seedqr-transcribe && nix develop ~/.foundation/sdk/foundation-sdk-1.0.0-aarch64-apple-darwin --command foundation pack --release
+# Run from your clone. FOUNDATION_SDK is the folder the SDK installer created,
+# for example ~/.foundation/sdk/foundation-sdk-1.0.0-aarch64-apple-darwin
+cd keyos-seedqr-transcribe
+nix develop "$FOUNDATION_SDK" --command foundation pack --release
 ```
 
 The package targets KeyOS `1.4.0-beta3` or newer and is signed with the local
